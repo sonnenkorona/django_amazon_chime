@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+  <header>
+    <title>{{ object.token }}</title>
+  </header>
+  <body>
+    <p>トークン；{{ object.token }}</p>
+    <p>ミーティング名：{{ object.name }}</p>
+    <p>時間：{{ object.datetime }}</p>
+    <p>メンバー:
+      {% for m in object.member.all %}
+      {{ m.username }},
+      {% endfor %}
+    </p>
+    <p>response:{{ object.response }}</p>
+
+    <a href="{% url 'meeting:meeting' object.token %}">ミーティングを始める</a>
+  <body>
+</html>

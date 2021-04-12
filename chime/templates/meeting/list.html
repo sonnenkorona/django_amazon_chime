@@ -1,0 +1,10 @@
+
+{% for meeting in object_list %}
+<p>
+  <a href="{% url 'meeting:detail' meeting.token %}">{{ meeting.token }} </a>
+</p>
+{% empty %}
+ミーティングがありません
+{% endfor %}
+
+<div><a href="{% url 'meeting:create' %}">ミーティングを作成する</a></div>

@@ -1,0 +1,77 @@
+{% load static %}
+{% load replace %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="{% static 'scripts/amazon-chime-sdk.min.js' %}"></script>
+    </head>
+    
+    <body>
+        <div>
+            <div id="video-tile">
+                <video id="video-tile-self"></video>
+            </div>
+            <audio id="audio-view"></audio>
+        </div>
+    </body>
+    
+    <script>
+    
+        (async () => {
+                
+            const meeting = JSON.parse(`{{ meeting.response|replace1|safe }}`);
+            const attendee = JSON.parse(`{{ attendee.response|replace2|safe }}`);
+    
+            const logger = new ChimeSDK.ConsoleLogger('ChimeMeetingLogs', ChimeSDK.LogLevel.DEBUG);
+            const deviceController = new ChimeSDK.DefaultDeviceController(logger);
+            const configuration = new ChimeSDK.MeetingSessionConfiguration(meeting,attendee);
+            const meetingSession = new ChimeSDK.DefaultMeetingSession(configuration, logger, deviceController);
+    
+            try {
+            const audioInputs = await meetingSession.audioVideo.listAudioInputDevices();
+            const audioOutputs = await meetingSession.audioVideo.listAudioOutputDevices();
+            const videoInputs = await meetingSession.audioVideo.listVideoInputDevices();
+            await meetingSession.audioVideo.chooseAudioInputDevice(audioInputs[0].deviceId);
+            await meetingSession.audioVideo.chooseAudioOutputDevice(audioOutputs[0].deviceId);
+            await meetingSession.audioVideo.chooseVideoInputDevice(videoInputs[0].deviceId);
+        } catch (err) {
+            // handle error - unable to acquire audio device perhaps due to permissions blocking
+        }
+
+        const audioOutputElement = document.getElementById('audio-view');
+        meetingSession.audioVideo.bindAudioElement(audioOutputElement);
+
+        const videoElementSelf = document.getElementById('video-tile-self');
+        const videoElementTile = document.getElementById('video-tile');
+
+        const observer = {
+            videoTileDidUpdate: tileState => {
+
+                if (tileState.localTile){
+                    meetingSession.audioVideo.bindVideoElement(tileState.tileId, videoElementSelf);
+                }else{
+                    if(!document.getElementById(tileState.tileId)){
+                        const node = document.createElement("video");
+                        node.id = tileState.tileId;
+                        videoElementTile.appendChild(node);
+                    }
+                    const videoElementNew = document.getElementById(tileState.tileId);
+                    meetingSession.audioVideo.bindVideoElement(tileState.tileId, videoElementNew);
+                }
+            },
+            videoTileWasRemoved: tileId => {
+                if(document.getElementById(tileId)){
+                    const videoElementRemoved = document.getElementById(tileId);
+                    videoElementRemoved.remove();
+                }
+            }
+        };
+        
+        meetingSession.audioVideo.addObserver(observer);
+        meetingSession.audioVideo.startLocalVideoTile();
+        meetingSession.audioVideo.start();
+        })();
+    </script>
+    
+    </html>

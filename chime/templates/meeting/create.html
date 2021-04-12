@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <header>
+    <title>ミーティング作成ページ</title>
+  </header>
+  <body>
+    <div>ミーティングを作成してください</div>
+    <form method="post" enctype='multipart/form-data'>
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit">ミーティング作成</button> 
+    </form>
+  <body>
+</html>
